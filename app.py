@@ -14,7 +14,6 @@ def _asof_ts():
 CSS = """
 <style>
 .block-container {max-width: 1750px; padding-top: 0.85rem; padding-bottom: 2rem;}
-.section-title {font-weight: 950; font-size: 1.05rem; margin: 0.5rem 0 0.4rem 0;}
 .small-muted {opacity: 0.75; font-size: 0.9rem;}
 .hr {border-top: 1px solid rgba(255,255,255,0.12); margin: 14px 0;}
 .hr-big {border-top: 2px solid rgba(255,255,255,0.18); margin: 18px 0 16px 0;}
@@ -23,8 +22,8 @@ CSS = """
   border: 1px solid rgba(255,255,255,0.10);
   background: rgba(255,255,255,0.03);
   border-radius: 12px;
-  padding: 10px 12px;          /* tighter */
-  margin-bottom: 10px;         /* tighter */
+  padding: 10px 12px;
+  margin-bottom: 10px;
 }
 .card h3{margin:0 0 8px 0; font-size: 1.0rem; font-weight: 950;}
 .card .hint{opacity:0.72; font-size:0.86rem; margin-top:-2px; margin-bottom:8px;}
@@ -77,23 +76,14 @@ CSS = """
   align-items:baseline;
   justify-content:space-between;
   gap: 10px;
-  padding: 6px 10px;           /* tighter */
+  padding: 6px 10px;
   border-radius: 10px;
   border: 1px solid rgba(255,255,255,0.08);
   background: rgba(255,255,255,0.02);
-  margin-bottom: 7px;          /* tighter */
+  margin-bottom: 7px;
 }
 .kv .k{opacity:0.82; font-weight:850;}
 .kv .v{font-weight:950;}
-
-.snapshot-label{
-  opacity: 0.85;
-  font-weight: 900;
-  font-size: 0.9rem;
-  letter-spacing: 0.2px;
-  text-transform: uppercase;
-  margin: 4px 0 10px 0;
-}
 </style>
 """
 st.markdown(CSS, unsafe_allow_html=True)
@@ -240,15 +230,13 @@ def _pill_for_dollar(val: str) -> str:
 
 
 # -------------------------
-# SECTION 1: Market Data
+# MARKET DATA LAYOUT (3 columns)
 # -------------------------
 def render_market_data(mi: dict):
-    st.markdown('<div class="snapshot-label">Screenshot 1: Market Data Snapshot</div>', unsafe_allow_html=True)
+    left, mid, right = st.columns([1.05, 1.35, 1.15])
 
-    # 3-column top area for a clean single screenshot
-    c1, c2, c3 = st.columns([1.05, 1.25, 1.15])
-
-    with c1:
+    # LEFT COLUMN
+    with left:
         st.markdown('<div class="card"><h3>Stock Market Exposure</h3>', unsafe_allow_html=True)
         ex = str(mi.get("Stock Market Exposure", {}).get("Exposure", "")).strip()
         pill_class = EXPOSURE_PILL.get(ex, "pill pill-amber")
@@ -260,14 +248,6 @@ def render_market_data(mi: dict):
         _kv("Type", f'<span class="{_pill_for_market_type(mt)}">{mt or "—"}</span>')
         st.markdown("</div>", unsafe_allow_html=True)
 
-        st.markdown('<div class="card"><h3>Trend Condition (QQQ)</h3><div class="hint">Simple yes/no filters.</div>', unsafe_allow_html=True)
-        tc = mi.get("Trend Condition (QQQ)", {}) or {}
-        keys = ["Above 5DMA", "Above 10DMA", "Above 20DMA", "Above 50DMA", "Above 200DMA"]
-        for k in keys:
-            _kv(k, _yesno_badge(tc.get(k, "—")))
-        st.markdown("</div>", unsafe_allow_html=True)
-
-    with c2:
         st.markdown('<div class="card"><h3>Nasdaq Net 52-Week New High/Low</h3><div class="hint">Positive = green, negative = red.</div>', unsafe_allow_html=True)
         hl = mi.get("Nasdaq Net 52-Week New High/Low", {}) or {}
         d = hl.get("Daily", "")
@@ -285,6 +265,15 @@ def render_market_data(mi: dict):
         )
         st.markdown("</div>", unsafe_allow_html=True)
 
+        st.markdown('<div class="card"><h3>Trend Condition (QQQ)</h3><div class="hint">Simple yes/no filters.</div>', unsafe_allow_html=True)
+        tc = mi.get("Trend Condition (QQQ)", {}) or {}
+        keys = ["Above 5DMA", "Above 10DMA", "Above 20DMA", "Above 50DMA", "Above 200DMA"]
+        for k in keys:
+            _kv(k, _yesno_badge(tc.get(k, "—")))
+        st.markdown("</div>", unsafe_allow_html=True)
+
+    # MIDDLE COLUMN
+    with mid:
         st.markdown('<div class="card"><h3>Market Indicators</h3><div class="hint">Tape / sentiment inputs.</div>', unsafe_allow_html=True)
         ind = mi.get("Market Indicators", {}) or {}
 
@@ -312,20 +301,21 @@ def render_market_data(mi: dict):
 
         st.markdown("</div>", unsafe_allow_html=True)
 
-    with c3:
-        st.markdown('<div class="card"><h3>Macro</h3><div class="hint">High-level backdrop.</div>', unsafe_allow_html=True)
-        mac = mi.get("Macro", {}) or {}
-        _kv("Fed Funds", f'{mac.get("Fed Funds","—")}')
-        _kv("M2 Money", f'{mac.get("M2 Money","—")}')
-        _kv("10yr", f'{mac.get("10yr","—")}')
-        st.markdown("</div>", unsafe_allow_html=True)
-
+    # RIGHT COLUMN
+    with right:
         st.markdown('<div class="card"><h3>Breadth & Participation</h3><div class="hint">Percent above key moving averages.</div>', unsafe_allow_html=True)
         br = mi.get("Breadth & Participation", {}) or {}
         _kv("% Price Above 10DMA", f'{br.get("% Price Above 10DMA","—")}%')
         _kv("% Price Above 20DMA", f'{br.get("% Price Above 20DMA","—")}%')
         _kv("% Price Above 50DMA", f'{br.get("% Price Above 50DMA","—")}%')
         _kv("% Price Above 200DMA", f'{br.get("% Price Above 200DMA","—")}%')
+        st.markdown("</div>", unsafe_allow_html=True)
+
+        st.markdown('<div class="card"><h3>Macro</h3><div class="hint">High-level backdrop.</div>', unsafe_allow_html=True)
+        mac = mi.get("Macro", {}) or {}
+        _kv("Fed Funds", f'{mac.get("Fed Funds","—")}')
+        _kv("M2 Money", f'{mac.get("M2 Money","—")}')
+        _kv("10yr", f'{mac.get("10yr","—")}')
         st.markdown("</div>", unsafe_allow_html=True)
 
         st.markdown('<div class="card"><h3>Hot Sectors / Industry Groups</h3>', unsafe_allow_html=True)
@@ -342,11 +332,9 @@ def render_market_data(mi: dict):
 
 
 # -------------------------
-# SECTION 2: Composite Model
+# COMPOSITE SECTION (separate screenshot)
 # -------------------------
 def render_composite_section(mi: dict):
-    st.markdown('<div class="snapshot-label">Screenshot 2: Composite Model Snapshot</div>', unsafe_allow_html=True)
-
     st.markdown('<div class="card"><h3>Composite Model</h3><div class="hint">0.0–2.0 each • Total out of 10.</div>', unsafe_allow_html=True)
 
     cm = mi.get("Composite Model", {}) or {}
@@ -384,11 +372,11 @@ st.caption(MANUAL_ASOF_LABEL)
 
 st.markdown('<div class="hr"></div>', unsafe_allow_html=True)
 
-# Screenshot block 1
+# Screenshot #1 area
 render_market_data(MANUAL_INPUTS)
 
-# Big divider between screenshot zones
+# Divider between screenshots
 st.markdown('<div class="hr-big"></div>', unsafe_allow_html=True)
 
-# Screenshot block 2
+# Screenshot #2 area
 render_composite_section(MANUAL_INPUTS)
